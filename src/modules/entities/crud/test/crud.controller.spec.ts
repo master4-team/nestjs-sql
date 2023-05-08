@@ -7,11 +7,10 @@ import {
   mockCrudDto,
   mockCrudPayload,
 } from './crud.mock';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { CrudEntity } from '../crud.entity';
-import { mockRepository } from '../../../database/test/database.service.mock';
 import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
 import { CrudController } from '../crud.controller';
+import { ValidatedUser } from '../../../auth/auth.types';
+import { mockValidatedUser } from '../../../auth/test/auth.mock';
 
 const moduleMocker = new ModuleMocker(global);
 
@@ -22,11 +21,13 @@ describe('CrudController', () => {
   let crudPayload: CrudPayload;
   let crudDeletePayload: CrudDeletePayload;
   let crudDto: CrudDto;
+  let validatedUser: ValidatedUser;
 
   beforeEach(async () => {
     crudPayload = { ...mockCrudPayload };
     crudDeletePayload = { ...mockCrudDeletePayload };
     crudDto = { ...mockCrudDto };
+    validatedUser = { ...mockValidatedUser };
 
     const app: TestingModule = await Test.createTestingModule({
       controllers: [CrudController],
@@ -59,5 +60,86 @@ describe('CrudController', () => {
 
   it('should be defined', () => {
     expect(crudController).toBeDefined();
+  });
+
+  describe('findAll', () => {
+    it('should return crud payloads', async () => {
+      jest.spyOn(crudService, 'find').mockResolvedValue([crudPayload]);
+
+      expect(await crudController.findAll({})).toStrictEqual([crudPayload]);
+
+      expect(crudService.find).toHaveBeenCalledWith({});
+    });
+  });
+
+  describe('findByUserId', () => {
+    it('should return crud payloads', async () => {
+      jest.spyOn(crudService, 'findByUserId').mockResolvedValue([crudPayload]);
+
+      expect(
+        await crudController.findByUserId(validatedUser, {}),
+      ).toStrictEqual([crudPayload]);
+
+      expect(crudService.findByUserId).toHaveBeenCalledWith(
+        validatedUser.userId,
+        {},
+      );
+    });
+  });
+
+  describe('findById', () => {
+    it('should return crud payload', async () => {
+      jest.spyOn(crudService, 'findById').mockResolvedValue(crudPayload);
+
+      expect(await crudController.findById(crudPayload.id)).toStrictEqual(
+        crudPayload,
+      );
+
+      expect(crudService.findById).toHaveBeenCalledWith(crudPayload.id);
+    });
+  });
+
+  describe('create', () => {
+    it('should return crud payload', async () => {
+      jest.spyOn(crudService, 'save').mockResolvedValue(crudPayload);
+
+      expect(await crudController.create(validatedUser, crudDto)).toStrictEqual(
+        crudPayload,
+      );
+
+      expect(crudService.save).toHaveBeenCalledWith({
+        ...crudDto,
+        userId: validatedUser.userId,
+      });
+    });
+  });
+
+  describe('updateById', () => {
+    it('should return crud payload', async () => {
+      jest.spyOn(crudService, 'updateById').mockResolvedValue(crudPayload);
+
+      expect(
+        await crudController.updateById(crudPayload.id, crudDto),
+      ).toStrictEqual(crudPayload);
+
+      expect(crudService.updateById).toHaveBeenCalledWith(
+        crudPayload.id,
+        crudDto,
+      );
+    });
+  });
+
+  describe('delete', () => {
+    it('should return crud payload', async () => {
+      jest
+        .spyOn(crudService, 'deleteById')
+        .mockResolvedValue(crudDeletePayload);
+
+      expect(await crudController.delete(crudPayload.id)).toStrictEqual(
+        crudDeletePayload,
+      );
+
+      expect(crudService.deleteById).toHaveBeenCalledWith(crudPayload.id);
+    });
   });
 });

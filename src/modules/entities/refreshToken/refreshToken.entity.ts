@@ -13,7 +13,7 @@ export class RefreshTokenEntity extends BaseEntity {
   @Column({ unique: true })
   userId: string;
 
-  @Column('datetime')
+  @Column()
   refreshExpiresIn: Date;
 
   @OneToOne(() => UserEntity)

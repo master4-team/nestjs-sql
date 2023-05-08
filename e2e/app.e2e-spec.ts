@@ -3,17 +3,15 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { initDb } from '../src/scripts/initDb';
-import { DateTime } from 'luxon';
-import { stringify } from 'qs';
 
 describe('App (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
   let server: any;
   let refreshToken: string;
+  let adminAccessToken: string;
   let userId: string;
-  let date: string;
-  const take = 1;
+  let crudId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -116,6 +114,80 @@ describe('App (e2e)', () => {
       .expect(200)
       .expect((res) => {
         expect(res.body?.data).toHaveProperty('id');
+      });
+  });
+
+  it('/api/auth/login (POST)', () => {
+    return request(server)
+      .post('/api/auth/login')
+      .send({ username: 'root', password: 'root' })
+      .expect(201)
+      .expect((res) => {
+        adminAccessToken = res.body?.data?.accessToken;
+        expect(accessToken).toBeDefined();
+      });
+  });
+
+  it('/api/crud (POST)', () => {
+    return request(server)
+      .post('/api/crud')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ displayName: 'displayName' })
+      .expect(201)
+      .expect((res) => {
+        expect(res.body?.data?.displayName).toBe('displayName');
+        crudId = res.body?.data?.id;
+      });
+  });
+
+  it('/api/crud/all (GET)', () => {
+    return request(server)
+      .get('/api/crud/all')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body?.data?.length).toBe(1);
+      });
+  });
+
+  it('/api/crud (GET)', () => {
+    return request(server)
+      .get('/api/crud')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body?.data?.length).toBe(1);
+      });
+  });
+
+  it('/api/crud/:id (GET)', () => {
+    return request(server)
+      .get(`/api/crud/${crudId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body?.data?.displayName).toBe('displayName');
+      });
+  });
+
+  it('/api/crud/:id (PUT)', () => {
+    return request(server)
+      .put(`/api/crud/${crudId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ displayName: 'newDisplayName' })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body?.data?.displayName).toBe('newDisplayName');
+      });
+  });
+
+  it('/api/crud/:id (DELETE)', () => {
+    return request(server)
+      .delete(`/api/crud/${crudId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body?.data?.affected).toBe(1);
       });
   });
 });

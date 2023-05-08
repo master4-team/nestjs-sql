@@ -28,6 +28,7 @@ import { FilterModule } from './modules/filter/filter.module';
 import { LoggingInterceptor } from './common/interceptors/logging';
 import { HealthModule } from './modules/health/health.module';
 import { FilterQueryMiddleware } from './common/middlewares/filterQuery';
+import { CrudModule } from './modules/entities/crud/crud.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { FilterQueryMiddleware } from './common/middlewares/filterQuery';
     LoggerModule,
     FilterModule,
     HealthModule,
+    CrudModule,
   ],
   providers: [
     {

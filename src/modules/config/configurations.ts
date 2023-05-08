@@ -3,14 +3,14 @@ export default () => ({
   host: process.env.HOST,
   database: {
     pg: {
-      url: process.env.MYSQL_URL,
-      host: process.env.MYSQL_HOST,
-      port: parseInt(process.env.MYSQL_PORT, 10),
-      username: process.env.MYSQL_USERNAME,
-      password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DATABASE,
-      synchronize: process.env.MYSQL_SYCRONIZE,
-      dropSchema: process.env.MYSQL_DROP_SCHEMA,
+      url: process.env.PG_URL,
+      host: process.env.PG_HOST,
+      port: parseInt(process.env.PG_PORT, 10),
+      username: process.env.PG_USERNAME,
+      password: process.env.PG_PASSWORD,
+      database: process.env.PG_DATABASE,
+      synchronize: process.env.PG_SYNCRONIZE,
+      dropSchema: process.env.PG_DROP_SCHEMA,
     },
   },
   jwt: {
