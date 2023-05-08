@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { TestingModule, Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtPayload, ValidatedUser } from '../../../auth/auth.types';
-import { EncryptionAndHashService } from '../../../encryptionAndHash/encrypttionAndHash.service';
+import { EncryptionAndHashService } from '../../../encryptionAndHash/encryptionAndHash.service';
 import { RefreshTokenEntity } from '../refreshToken.entity';
 import { RefreshTokenService } from '../refreshToken.service';
 import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
@@ -22,7 +22,7 @@ import { DateTime } from 'luxon';
 import { BusinessException } from '../../../../common/exceptions';
 import { ErrorMessageEnum } from '../../../../common/types';
 import { HttpStatus, UnauthorizedException } from '@nestjs/common';
-import { EncryptionPayload } from '../../../encryptionAndHash/types';
+import { EncryptionPayload } from '../../../encryptionAndHash/encryptionAndHash.types';
 
 const moduleMocker = new ModuleMocker(global);
 
