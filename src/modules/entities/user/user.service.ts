@@ -6,7 +6,7 @@ import { BaseService } from '../../base/base.service';
 import { EncryptionAndHashService } from '../../encryptionAndHash/encrypttionAndHash.service';
 import { ChangePasswordDto, UpdateUserDto } from './user.dto';
 import { UserEntity } from './user.entity';
-import { ParsedFilterQuery } from '../../filter/types';
+import { ParsedFilterQuery } from '../../filter/filter.types';
 import hideOrOmitDeep from '../../../utils/hideOrOmitFields';
 import { UserPayload } from './user.types';
 import { ErrorMessageEnum } from '../../../common/types';

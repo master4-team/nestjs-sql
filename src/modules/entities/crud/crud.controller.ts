@@ -10,7 +10,7 @@ import {
 import { AuthorizedUser } from '../../../common/decorators/authorizedUser';
 import { Role, Roles } from '../../../common/decorators/roles';
 import { ValidatedUser } from '../../auth/auth.types';
-import { ParsedFilterQuery } from '../../filter/types';
+import { ParsedFilterQuery } from '../../filter/filter.types';
 import { CrudDto } from './crud.dto';
 import { CrudEntity } from './crud.entity';
 import { CrudService } from './crud.service';

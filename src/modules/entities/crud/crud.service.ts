@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { BaseService } from '../../base/base.service';
 import { CrudEntity } from './crud.entity';
 import { CrudPayload } from './crud.types';
-import { ParsedFilterQuery } from '../../filter/types';
+import { ParsedFilterQuery } from '../../filter/filter.types';
 
 @Injectable()
 export class CrudService extends BaseService<CrudEntity> {
