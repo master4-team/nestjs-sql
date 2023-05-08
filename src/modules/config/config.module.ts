@@ -18,6 +18,7 @@ import configurations from './configurations';
         PG_PASSWORD: Joi.string().required(),
         PG_DATABASE: Joi.string().required(),
         PG_SYNCRONIZE: Joi.string().required(),
+        PG_DROP_SCHEMA: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_IN: Joi.number().required(),
         JWT_REFRESH_SECRET: Joi.string().required(),
