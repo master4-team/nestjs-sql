@@ -3,17 +3,17 @@ import { BaseEntity } from '../../base/base.entity';
 import { UserEntity } from '../user/user.entity';
 
 @Entity('token')
-export class TokenEntity extends BaseEntity {
-  @Column()
-  accessToken: string;
-
-  @Column()
+export class RefreshTokenEntity extends BaseEntity {
+  @Column('text')
   refreshToken: string;
 
   @Column()
+  iv: string;
+
+  @Column({ unique: true })
   userId: string;
 
-  @Column()
+  @Column('datetime')
   refreshExpiresIn: Date;
 
   @OneToOne(() => UserEntity)
@@ -21,5 +21,5 @@ export class TokenEntity extends BaseEntity {
     name: 'userId',
     referencedColumnName: 'id',
   })
-  user: Partial<UserEntity>;
+  user?: Partial<UserEntity>;
 }

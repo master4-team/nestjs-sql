@@ -9,7 +9,7 @@ import {
   HealthCheckResult,
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
-import { Public } from '../../common/decorators/public';
+import { SkipGuard } from '../../common/decorators/skipGuard';
 
 @Controller('health')
 export class HealthController {
@@ -24,7 +24,7 @@ export class HealthController {
 
   @Get()
   @HealthCheck()
-  @Public()
+  @SkipGuard()
   async check(): Promise<HealthCheckResult> {
     return this.health.check([
       () =>
@@ -32,13 +32,19 @@ export class HealthController {
           'Master4 app',
           `http://${this.configService.get<string>(
             'host',
-          )}:${this.configService.get<number>('port')}/api/ping`,
+          )}:${this.configService.get<number>('port')}/api/health/ping`,
         ),
-      () => this.db.pingCheck('Postgres', { timeout: 1500 }),
+      () => this.db.pingCheck('PG', { timeout: 1500 }),
       () =>
         this.disk.checkStorage('Storage', { path: '/', thresholdPercent: 0.5 }),
-      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
-      () => this.memory.checkRSS('memory_rss', 150 * 1024 * 1024),
+      () => this.memory.checkHeap('memory_heap', 1024 * 1024 * 1024),
+      () => this.memory.checkRSS('memory_rss', 1024 * 1024 * 1024),
     ]);
+  }
+
+  @Get('ping')
+  @SkipGuard()
+  async ping(): Promise<string> {
+    return 'OK';
   }
 }

@@ -26,7 +26,7 @@ async function bootstrap() {
 
   app
     .listen(4000)
-    .then(() => logger.log(`NestedJS server is listening on port ${port}`))
+    .then(() => logger.log(`NestedJS server is listening on port ${port} 🚀`))
     .catch(console.error);
 }
 bootstrap();

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   DeleteResult,
   FindOptionsSelect,
@@ -7,22 +7,17 @@ import {
   Repository,
 } from 'typeorm';
 import { ParsedFilterQuery } from '../filter/types';
-import { LoggerService } from '../logger/logger.service';
 import { BaseEntity } from './base.entity';
+import { BusinessException } from '../../common/exceptions';
+import { ErrorMessageEnum } from '../../common/types';
 
 @Injectable()
-export abstract class BaseService<
-  L extends LoggerService,
-  T extends BaseEntity,
-> {
-  protected constructor(
-    protected readonly repository: Repository<T>,
-    protected readonly logger: L,
-  ) {}
+export abstract class BaseService<T extends BaseEntity> {
+  protected constructor(protected readonly repository: Repository<T>) {}
 
-  async count(filterQuery: ParsedFilterQuery<T> = {}): Promise<number> {
+  async count(where: FindOptionsWhere<T> = {}): Promise<number> {
     return await this.repository.count({
-      where: filterQuery.where,
+      where,
     });
   }
 
@@ -89,7 +84,10 @@ export abstract class BaseService<
   ): Promise<T> {
     const entity = await this.findOne(filterQuery);
     if (!entity) {
-      return undefined;
+      throw new BusinessException(
+        ErrorMessageEnum.entityNotFound,
+        HttpStatus.NOT_FOUND,
+      );
     }
     return await this.save({
       ...entity,
@@ -100,7 +98,10 @@ export abstract class BaseService<
   async updateById(id: string, updateDto: Partial<T>): Promise<T> {
     const entity = await this.findById(id);
     if (!entity) {
-      return undefined;
+      throw new BusinessException(
+        ErrorMessageEnum.entityNotFound,
+        HttpStatus.NOT_FOUND,
+      );
     }
     return await this.save({
       ...entity,
@@ -129,7 +130,7 @@ export abstract class BaseService<
     if (!entity) {
       return {
         affected: 0,
-        raw: undefined,
+        raw: null,
       };
     }
     return await this.repository.delete({
@@ -137,10 +138,8 @@ export abstract class BaseService<
     } as FindOptionsWhere<T>);
   }
 
-  async deleteMany(filterQuery: ParsedFilterQuery<T>): Promise<DeleteResult> {
-    return await this.repository.delete(
-      filterQuery.where as FindOptionsWhere<T>,
-    );
+  async deleteMany(where: FindOptionsWhere<T> = {}): Promise<DeleteResult> {
+    return await this.repository.delete(where as FindOptionsWhere<T>);
   }
 
   private getSelectQuery(

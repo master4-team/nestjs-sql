@@ -1,52 +1,80 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  ErrorMessageEnum,
-  UNAUTHORIZED,
-} from '../../../common/constants/errors';
 import { BusinessException } from '../../../common/exceptions';
 import { BaseService } from '../../base/base.service';
 import { EncryptionAndHashService } from '../../encryptionAndHash/encrypttionAndHash.service';
-import { LoggerService } from '../../logger/logger.service';
-import { ChangePasswordDto } from './user.dto';
+import { ChangePasswordDto, UpdateUserDto } from './user.dto';
 import { UserEntity } from './user.entity';
+import { ParsedFilterQuery } from '../../filter/types';
+import hideOrOmitDeep from '../../../utils/hideOrOmitFields';
+import { UserPayload } from './user.types';
+import { ErrorMessageEnum } from '../../../common/types';
 
 @Injectable()
-export class UserService extends BaseService<LoggerService, UserEntity> {
+export class UserService extends BaseService<UserEntity> {
   constructor(
-    logger: LoggerService,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     private readonly encryptionAndHashService: EncryptionAndHashService,
   ) {
-    super(userRepository, logger);
+    super(userRepository);
+  }
+
+  async findUsers(
+    filter: ParsedFilterQuery<UserEntity>,
+  ): Promise<UserPayload[]> {
+    const users = await this.find(filter);
+    return hideOrOmitDeep(users, ['password'], true) as UserPayload[];
+  }
+
+  async findUserById(id: string): Promise<UserPayload> {
+    const user = await this.findById(id);
+    if (!user) {
+      return null;
+    }
+    return hideOrOmitDeep(user, ['password'], true) as UserPayload;
+  }
+
+  async updateUserById(
+    id: string,
+    updateDto: UpdateUserDto,
+  ): Promise<UserPayload> {
+    const updated = await this.updateById(id, updateDto);
+    return hideOrOmitDeep(updated, ['password'], true) as UserPayload;
   }
 
   async changePassword(
     userId: string,
     changePasswordDto: ChangePasswordDto,
-  ): Promise<UserEntity> {
+  ): Promise<UserPayload> {
     const user = await this.findById(userId);
 
     if (!user) {
-      throw new BusinessException(UNAUTHORIZED, ErrorMessageEnum.userNotFound);
+      throw new BusinessException(
+        ErrorMessageEnum.userNotFound,
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const { oldPassword, newPassword } = changePasswordDto;
 
-    const oldPasswordHash = await this.encryptionAndHashService.hash(
-      oldPassword,
-    );
+    if (oldPassword === newPassword) {
+      throw new BusinessException(
+        ErrorMessageEnum.oldPasswordEqualNewPassword,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const isOldPasswordValid = await this.encryptionAndHashService.compare(
-      oldPasswordHash,
+      changePasswordDto.oldPassword,
       user.password,
     );
 
     if (!isOldPasswordValid) {
       throw new BusinessException(
-        UNAUTHORIZED,
         ErrorMessageEnum.invalidOldPassword,
+        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -54,8 +82,10 @@ export class UserService extends BaseService<LoggerService, UserEntity> {
       newPassword,
     );
 
-    return await this.updateById(user.id, {
+    const updated = await this.updateById(user.id, {
       password: newPasswordHash,
     });
+
+    return hideOrOmitDeep(updated, ['password'], true) as UserPayload;
   }
 }

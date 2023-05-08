@@ -7,15 +7,15 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { DeleteResult, FindOptionsWhere } from 'typeorm';
 import { AuthorizedUser } from '../../../common/decorators/authorizedUser';
 import { Role, Roles } from '../../../common/decorators/roles';
-import { ValidatedUser } from '../../auth/types';
+import { ValidatedUser } from '../../auth/auth.types';
 import { ParsedFilterQuery } from '../../filter/types';
 import { CrudDto } from './crud.dto';
 import { CrudEntity } from './crud.entity';
 import { CrudService } from './crud.service';
 import { Filter } from '../../../common/decorators/filter';
+import { CrudDeletePayload, CrudPayload } from './crud.types';
 
 @Controller('crud')
 export class CrudController {
@@ -25,7 +25,7 @@ export class CrudController {
   @Get('all')
   async findAll(
     @Filter() filter: ParsedFilterQuery<CrudEntity>,
-  ): Promise<CrudEntity[]> {
+  ): Promise<CrudPayload[]> {
     return await this.crudService.find(filter);
   }
 
@@ -33,24 +33,14 @@ export class CrudController {
   @Get()
   async findByUserId(
     @AuthorizedUser() user: ValidatedUser,
-    @Filter() filter: ParsedFilterQuery<CrudEntity>,
-  ): Promise<CrudEntity[]> {
-    if (!(filter.where as FindOptionsWhere<CrudEntity>[])?.length) {
-      filter.where = {
-        ...filter.where,
-        userId: user.userId,
-      };
-    } else {
-      (filter.where as FindOptionsWhere<CrudEntity>[]).forEach((item) => {
-        item.userId = user.userId;
-      });
-    }
-    return await this.crudService.find(filter);
+    @Filter() filter: ParsedFilterQuery<CrudPayload>,
+  ): Promise<CrudPayload[]> {
+    return this.crudService.findByUserId(user.userId, filter);
   }
 
   @Roles(Role.ADMIN, Role.USER)
   @Get(':id')
-  async findById(@Param('id') id: string): Promise<CrudEntity> {
+  async findById(@Param('id') id: string): Promise<CrudPayload> {
     return await this.crudService.findById(id);
   }
 
@@ -59,7 +49,7 @@ export class CrudController {
   async create(
     @AuthorizedUser() user: ValidatedUser,
     @Body() createDto: CrudDto,
-  ): Promise<CrudEntity> {
+  ): Promise<CrudPayload> {
     return await this.crudService.save({ ...createDto, userId: user.userId });
   }
 
@@ -68,13 +58,13 @@ export class CrudController {
   async updateById(
     @Param('id') id: string,
     @Body() updateDto: CrudDto,
-  ): Promise<CrudEntity> {
+  ): Promise<CrudPayload> {
     return await this.crudService.updateById(id, updateDto);
   }
 
   @Roles(Role.ADMIN, Role.USER)
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<DeleteResult> {
+  async delete(@Param('id') id: string): Promise<CrudDeletePayload> {
     return await this.crudService.deleteById(id);
   }
 }

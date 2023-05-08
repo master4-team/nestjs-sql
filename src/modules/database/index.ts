@@ -9,14 +9,16 @@ import { ConfigModule } from '../config/config.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('database.postgres.host'),
-        port: configService.get<number>('database.postgres.port'),
-        username: configService.get<string>('database.postgres.username'),
-        password: configService.get<string>('database.postgres.password'),
-        database: configService.get<string>('database.postgres.database'),
+        host: configService.get<string>('database.pg.host'),
+        port: configService.get<number>('database.pg.port'),
+        username: configService.get<string>('database.pg.username'),
+        password: configService.get<string>('database.pg.password'),
+        database: configService.get<string>('database.pg.database'),
         entities: [],
         synchronize:
-          configService.get<string>('database.postgres.synchronize') === 'true',
+          configService.get<string>('database.pg.synchronize') === 'true',
+        dropSchema:
+          configService.get<string>('database.pg.dropSchema') === 'true',
         autoLoadEntities: true,
       }),
       inject: [ConfigService],

@@ -12,5 +12,5 @@ export class CrudEntity extends BaseEntity {
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
-  user: Partial<UserEntity>;
+  user?: Partial<UserEntity>;
 }

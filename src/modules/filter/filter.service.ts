@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   And,
   Equal,
@@ -14,36 +14,42 @@ import {
   MoreThanOrEqual,
   Not,
 } from 'typeorm';
-import {
-  ErrorMessageEnum,
-  INVALID_FILTER_QUERY,
-} from '../../common/constants/errors';
 import { BusinessException } from '../../common/exceptions';
 import { LoggerService } from '../logger/logger.service';
 import {
-  BaseFilter,
   Filter,
-  FilterOperator,
+  FilterOperators,
   FilterOperatorEnum,
   FilterRequestQuery,
   FilterValue,
   ParsedFilterQuery,
   Sort,
+  Projections,
 } from './types';
 import createObject from '../../utils/createObject';
 import getDateOrValue from '../../utils/getDateOrValue';
+import { ErrorMessageEnum } from '../../common/types';
 
 @Injectable()
 export class FilterService {
+  static parseOperatorsObject = {
+    [FilterOperatorEnum.IN]: (value: FilterValue[]) => In(value),
+    [FilterOperatorEnum.NIN]: (value: FilterValue[]) => Not(In(value)),
+    [FilterOperatorEnum.NE]: (value: FilterValue) => Not(Equal(value)),
+    [FilterOperatorEnum.GT]: (value: FilterValue) => MoreThan(value),
+    [FilterOperatorEnum.GTE]: (value: FilterValue) => MoreThanOrEqual(value),
+    [FilterOperatorEnum.LT]: (value: FilterValue) => LessThan(value),
+    [FilterOperatorEnum.LTE]: (value: FilterValue) => LessThanOrEqual(value),
+    [FilterOperatorEnum.LIKE]: (value: FilterValue) => Like(`%${value}%`),
+  };
+
   constructor(private readonly logger: LoggerService) {}
 
   parseFilterRequestQuery<T>(query: FilterRequestQuery): ParsedFilterQuery<T> {
     try {
       const parsedFilterQuery: ParsedFilterQuery<T> = {};
       if (query.filter) {
-        parsedFilterQuery.where = this.parseFilter(
-          this.parseFilterFromQueryString<T>(query.filter),
-        );
+        parsedFilterQuery.where = this.parseFilter(query.filter);
       }
       if (query.fields) {
         parsedFilterQuery.select = this.parseSelectFromQueryString<T>(
@@ -53,11 +59,11 @@ export class FilterService {
       if (query.sort) {
         parsedFilterQuery.order = this.parseSortFromQueryString<T>(query.sort);
       }
-      if (query.limit) {
-        parsedFilterQuery.take = query.limit;
+      if (!isNaN(+query.limit)) {
+        parsedFilterQuery.take = +query.limit;
       }
-      if (query.skip) {
-        parsedFilterQuery.skip = query.skip;
+      if (!isNaN(+query.skip)) {
+        parsedFilterQuery.skip = +query.skip;
       }
       return parsedFilterQuery;
     } catch (error) {
@@ -67,8 +73,8 @@ export class FilterService {
         FilterService.name,
       );
       throw new BusinessException(
-        INVALID_FILTER_QUERY,
         ErrorMessageEnum.invalidFilter,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -84,33 +90,22 @@ export class FilterService {
     return createObject(key, getDateOrValue(value));
   }
 
-  private convertOperator(operator: FilterOperator): FindOperator<FilterValue> {
-    const key = Object.keys(operator)[0] as FilterOperatorEnum;
-    const value = operator[key];
-    switch (key) {
-      case FilterOperatorEnum.IN:
-        return In(getDateOrValue(value) as FilterValue[]);
-      case FilterOperatorEnum.NIN:
-        return Not(In(getDateOrValue(value) as FilterValue[]));
-      case FilterOperatorEnum.NE:
-        return Not(Equal(getDateOrValue(value) as FilterValue));
-      case FilterOperatorEnum.GT:
-        return MoreThan(getDateOrValue(value) as FilterValue);
-      case FilterOperatorEnum.GTE:
-        return MoreThanOrEqual(getDateOrValue(value) as FilterValue);
-      case FilterOperatorEnum.LT:
-        return LessThan(getDateOrValue(value) as FilterValue);
-      case FilterOperatorEnum.LTE:
-        return LessThanOrEqual(getDateOrValue(value) as FilterValue);
-      case FilterOperatorEnum.LIKE:
-        // string only
-        return Like(`%${value}%` as FilterValue);
-      default:
-        return Equal(getDateOrValue(value) as FilterValue);
-    }
+  private convertOperators(
+    operators: FilterOperators,
+  ): FindOperator<FilterValue> {
+    const operatorKeys = Object.keys(operators);
+    const parsedOperators: FindOperator<FilterValue>[] = [];
+    operatorKeys.forEach((key) => {
+      const value = operators[key];
+      parsedOperators.push(
+        FilterService.parseOperatorsObject[key](getDateOrValue(value)),
+      );
+    });
+
+    return And(...parsedOperators);
   }
 
-  private parseBaseFilter<T>(filter: BaseFilter<T>): FindOptionsWhere<T> {
+  private parseBaseFilter<T>(filter: Filter): FindOptionsWhere<T> {
     const parsedBaseFilter: {
       [P in keyof T]?: FindOperator<FilterValue> | FilterValue;
     } = {};
@@ -120,7 +115,7 @@ export class FilterService {
           parsedBaseFilter,
           this.parseKeyValue(
             key,
-            And(this.convertOperator(filter[key] as FilterOperator)),
+            this.convertOperators(filter[key] as FilterOperators),
             false,
           ),
         );
@@ -134,19 +129,13 @@ export class FilterService {
     return parsedBaseFilter as FindOptionsWhere<T>;
   }
 
-  private parseFilterFromQueryString<T>(filter: string): Filter<T> {
-    return JSON.parse(filter) as Filter<T>;
-  }
-
-  private parseFilter<T>(
-    filter: Filter<T>,
-  ): FindOptionsWhere<T> | FindOptionsWhere<T>[] {
+  private parseFilter<T>(filter: Filter): FindOptionsWhere<T>[] {
     const orFilter = [];
     const parsedFilter = {};
     for (const key in filter) {
       if (typeof filter[key] === 'object' && filter[key] !== null) {
-        if (key === 'or') {
-          filter[key].map((item: BaseFilter<T>) => {
+        if (key === 'or' && Array.isArray(filter[key])) {
+          (filter[key] as Filter[]).map((item: Filter) => {
             const parsedBaseFilter = this.parseBaseFilter(item);
             orFilter.push(parsedBaseFilter);
           });
@@ -155,13 +144,16 @@ export class FilterService {
             parsedFilter,
             this.parseKeyValue(
               key,
-              And(this.convertOperator(filter[key])),
+              this.convertOperators(filter[key] as FilterOperators),
               false,
             ),
           );
         }
       } else {
-        Object.assign(parsedFilter, this.parseKeyValue(key, filter[key]));
+        Object.assign(
+          parsedFilter,
+          this.parseKeyValue(key, filter[key] as FilterValue),
+        );
       }
     }
     if (orFilter.length > 0) {
@@ -169,15 +161,14 @@ export class FilterService {
         return { ...item, ...parsedFilter };
       });
     }
-    return parsedFilter;
+    return [parsedFilter];
   }
 
   private parseSelectFromQueryString<T>(
-    projections: string,
+    projections: Projections,
   ): FindOptionsSelect<T> {
-    const parsed = JSON.parse(projections) as { [P in keyof T]?: number };
-    return Object.keys(parsed).reduce((acc, key) => {
-      if (parsed[key] === 1) {
+    return Object.keys(projections).reduce((acc, key) => {
+      if (projections[key] === 1) {
         Object.assign(acc, createObject(key, true));
       } else {
         Object.assign(acc, createObject(key, false));
@@ -186,12 +177,11 @@ export class FilterService {
     }, {});
   }
 
-  private parseSortFromQueryString<T>(sort: string): FindOptionsOrder<T> {
-    const parsed = JSON.parse(sort) as Sort<T>;
-    return Object.keys(parsed).reduce((acc, key) => {
+  private parseSortFromQueryString<T>(sort: Sort): FindOptionsOrder<T> {
+    return Object.keys(sort).reduce((acc, key) => {
       Object.assign(
         acc,
-        createObject(key, (parsed[key] as string).toUpperCase()),
+        createObject(key, (sort[key] as string).toUpperCase()),
       );
       return acc;
     }, {});
