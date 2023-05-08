@@ -32,6 +32,12 @@
 $ yarn install
 ```
 
+## Prepare husky
+
+```bash
+$ yarn prepare
+```
+
 ## Initialize database
 
 ```bash
@@ -85,6 +91,7 @@ PG_USERNAME=
 PG_PASSWORD=
 PG_DATABASE=
 PG_SYCRONIZE=
+PG_DROP_SCHEMA=
 ```
 
 ## Support
