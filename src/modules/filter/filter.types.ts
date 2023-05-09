@@ -46,7 +46,7 @@ export type FilterRequestQuery = {
   skip?: string;
   limit?: string;
   sort?: Sort;
-  fields?: SelectedFields;
+  select?: SelectedFields;
 };
 
 export type ParsedFilterQuery<T> = {

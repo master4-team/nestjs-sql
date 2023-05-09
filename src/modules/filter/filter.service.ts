@@ -51,9 +51,9 @@ export class FilterService {
       if (query.filter) {
         parsedFilterQuery.where = this.parseFilter(query.filter);
       }
-      if (query.fields) {
+      if (query.select) {
         parsedFilterQuery.select = this.parseSelectFromQueryString<T>(
-          query.fields,
+          query.select,
         );
       }
       if (query.sort) {

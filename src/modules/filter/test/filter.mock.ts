@@ -44,7 +44,7 @@ const mockFilterQuery: FilterRequestQuery = {
   sort: {
     field1: 'asc',
   },
-  fields: {
+  select: {
     field1: '1',
     field2: '0',
   },
