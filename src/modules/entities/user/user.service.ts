@@ -6,7 +6,6 @@ import { BaseService } from '../../base/base.service';
 import { EncryptionAndHashService } from '../../encryptionAndHash/encryptionAndHash.service';
 import { ChangePasswordDto, UpdateUserDto } from './user.dto';
 import { UserEntity } from './user.entity';
-import { ParsedFilterQuery } from '../../filter/filter.types';
 import hideOrOmitDeep from '../../../utils/hideOrOmitFields';
 import { UserPayload } from './user.types';
 import { ErrorMessageEnum } from '../../../common/types';
@@ -19,13 +18,6 @@ export class UserService extends BaseService<UserEntity> {
     private readonly encryptionAndHashService: EncryptionAndHashService,
   ) {
     super(userRepository);
-  }
-
-  async findUsers(
-    filter: ParsedFilterQuery<UserEntity>,
-  ): Promise<UserPayload[]> {
-    const users = await this.find(filter);
-    return hideOrOmitDeep(users, ['password'], true) as UserPayload[];
   }
 
   async findUserById(id: string): Promise<UserPayload> {

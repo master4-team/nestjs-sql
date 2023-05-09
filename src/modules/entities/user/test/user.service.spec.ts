@@ -73,16 +73,6 @@ describe('UserService', () => {
     expect(userService).toBeDefined();
   });
 
-  describe('findUsers', () => {
-    it('should return user payloads', async () => {
-      jest.spyOn(userService, 'find').mockResolvedValue([user]);
-
-      expect(await userService.findUsers({})).toStrictEqual([userPayload]);
-
-      expect(userService.find).toHaveBeenCalledWith({});
-    });
-  });
-
   describe('findUserById', () => {
     it('should return user payload', async () => {
       jest.spyOn(userService, 'findById').mockResolvedValue(user);

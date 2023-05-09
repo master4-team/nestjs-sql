@@ -72,10 +72,10 @@ describe('UserController', () => {
     });
   });
 
-  describe('updateById', () => {
+  describe('updateProfile', () => {
     it('should return a user', async () => {
       expect(
-        await userController.updateById(validatedUser, updateUserDto),
+        await userController.updateProfile(validatedUser, updateUserDto),
       ).toStrictEqual(userPayload);
 
       expect(userService.updateUserById).toHaveBeenCalledWith(

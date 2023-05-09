@@ -19,7 +19,7 @@ export class UserController {
 
   @Roles(Role.USER, Role.ADMIN)
   @Put('me')
-  async updateById(
+  async updateProfile(
     @AuthorizedUser() user: ValidatedUser,
     @Body() updateDto: UpdateUserDto,
   ): Promise<UserPayload> {
