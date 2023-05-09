@@ -24,8 +24,8 @@ export enum FilterOperatorEnum {
   LIKE = 'like',
 }
 
-export type Projections = {
-  [key: string]: 0 | 1;
+export type SelectedFields = {
+  [key: string]: '0' | '1';
 };
 
 export type Sort = {
@@ -46,7 +46,7 @@ export type FilterRequestQuery = {
   skip?: string;
   limit?: string;
   sort?: Sort;
-  fields?: Projections;
+  fields?: SelectedFields;
 };
 
 export type ParsedFilterQuery<T> = {

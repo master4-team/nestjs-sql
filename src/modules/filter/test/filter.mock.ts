@@ -45,8 +45,8 @@ const mockFilterQuery: FilterRequestQuery = {
     field1: 'asc',
   },
   fields: {
-    field1: 1,
-    field2: 0,
+    field1: '1',
+    field2: '0',
   },
 };
 

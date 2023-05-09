@@ -24,7 +24,7 @@ import {
   FilterValue,
   ParsedFilterQuery,
   Sort,
-  Projections,
+  SelectedFields,
 } from './filter.types';
 import createObject from '../../utils/createObject';
 import getDateOrValue from '../../utils/getDateOrValue';
@@ -165,10 +165,10 @@ export class FilterService {
   }
 
   private parseSelectFromQueryString<T>(
-    projections: Projections,
+    selectedFields: SelectedFields,
   ): FindOptionsSelect<T> {
-    return Object.keys(projections).reduce((acc, key) => {
-      if (projections[key] === 1) {
+    return Object.keys(selectedFields).reduce((acc, key) => {
+      if (selectedFields[key] === '1') {
         Object.assign(acc, createObject(key, true));
       } else {
         Object.assign(acc, createObject(key, false));
