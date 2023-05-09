@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Headers, Post } from '@nestjs/common';
-import { SkipGuard } from '../../../common/decorators/skipGuard';
+import { SkipJwtGuard } from '../../../common/decorators/skipJwtGuard';
 import { Role, Roles } from '../../../common/decorators/roles';
 import { RefreshTokenDto, RevokeRefreshTokenDto } from './refreshToken.dto';
 import { RefreshTokenService } from './refreshToken.service';
@@ -9,7 +9,7 @@ import { RefreshTokenPayload, RevokeTokenPayload } from './refreshToken.types';
 export class RefreshTokenController {
   constructor(private readonly refreshTokenService: RefreshTokenService) {}
 
-  @SkipGuard()
+  @SkipJwtGuard()
   @Post('refresh')
   async refreshToken(
     @Body() body: RefreshTokenDto,

@@ -9,7 +9,7 @@ import {
   HealthCheckResult,
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
-import { SkipGuard } from '../../common/decorators/skipGuard';
+import { SkipJwtGuard } from '../../common/decorators/skipJwtGuard';
 
 @Controller('health')
 export class HealthController {
@@ -24,7 +24,7 @@ export class HealthController {
 
   @Get()
   @HealthCheck()
-  @SkipGuard()
+  @SkipJwtGuard()
   async check(): Promise<HealthCheckResult> {
     return this.health.check([
       () =>
@@ -43,7 +43,7 @@ export class HealthController {
   }
 
   @Get('ping')
-  @SkipGuard()
+  @SkipJwtGuard()
   async ping(): Promise<string> {
     return 'OK';
   }
