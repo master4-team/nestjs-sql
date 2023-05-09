@@ -16,7 +16,7 @@ export class RefreshTokenController {
     @Headers('authorization') authorization: string,
   ): Promise<RefreshTokenPayload> {
     return await this.refreshTokenService.refresh(
-      authorization.split(' ')[1],
+      authorization?.split(' ')[1],
       body.refreshToken,
     );
   }
