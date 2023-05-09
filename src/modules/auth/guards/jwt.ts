@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { SKIP_GUARD_KEY } from '../../../common/decorators/skipJwtGuard';
+import { SKIP_JWT_GUARD_KEY } from '../../../common/decorators/skipJwtGuard';
 import { ErrorMessageEnum } from '../../../common/types';
 
 @Injectable()
@@ -15,11 +15,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   async canActivate(context: ExecutionContext) {
-    const isSkipJWTGuard = this.reflector.get<boolean>(
-      SKIP_GUARD_KEY,
+    const isSkipJwtGuard = this.reflector.get<boolean>(
+      SKIP_JWT_GUARD_KEY,
       context.getHandler(),
     );
-    if (isSkipJWTGuard) return true;
+    if (isSkipJwtGuard) return true;
 
     const request = context.switchToHttp().getRequest();
     const accessToken = request.headers.authorization?.split(' ')[1];
